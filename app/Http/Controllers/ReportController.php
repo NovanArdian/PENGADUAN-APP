@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Exports\ReportsExport;
 use Maatwebsite\Excel\Facades\Excel;
-
+use App\Models\User;
 
 class ReportController extends Controller
 {
@@ -17,19 +17,28 @@ class ReportController extends Controller
      */
     public function index()
     {
-        //
-        $reports = Report::orderBy('created_at', 'desc')->with('responses')->get();
+        /** @var User $user */
+        $user = auth()->user();
+        
+        if ($user->role === 'STAFF') {
+            $staffProvince = $user->staffProvinces()->first();
+            if (!$staffProvince) {
+                return redirect()->back()->with('error', 'Staff belum memiliki provinsi yang ditugaskan.');
+            }
+            
+            $reports = Report::where('province', $staffProvince->province)
+                           ->orderBy('created_at', 'desc')
+                           ->with('responses')
+                           ->get();
+        } else {
+            $reports = Report::orderBy('created_at', 'desc')->with('responses')->get();
+        }
 
-        // Kirim data laporan ke view
         return view('reports.report', compact('reports'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
         return view('reports.create');
     }
 
@@ -38,20 +47,22 @@ class ReportController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi input
-        $validated = $request->validate([
-            'description' => 'required|string|max:1000',
-            'type'        => 'required|in:KEJAHATAN,PEMBANGUNAN,SOSIAL',
-            'province'    => 'required|string|max:255',
-            'regency'     => 'required|string|max:255',
-            'subdistrict' => 'required|string|max:255',
-            'village'     => 'required|string|max:255',
-            'image'       => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-        ]);
+        try {
+            $validated = $request->validate([
+                'description' => 'required|string|max:1000',
+                'type'        => 'required|in:KEJAHATAN,PEMBANGUNAN,SOSIAL',
+                'province'    => 'required|string|max:255',
+                'regency'     => 'required|string|max:255',
+                'subdistrict' => 'required|string|max:255',
+                'village'     => 'required|string|max:255',
+                'image'       => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->with('error', 'Data tidak valid. Periksa kembali form Anda.')->withInput();
+        }
 
-        // Simpan laporan baru
         $report = new Report();
-        $report->user_id = Auth::id(); // Ambil ID user yang sedang login
+        $report->user_id = Auth::id();
         $report->description = $validated['description'];
         $report->type = $validated['type'];
         $report->province = $validated['province'];
@@ -60,16 +71,13 @@ class ReportController extends Controller
         $report->village = $validated['village'];
         $report->voting = 0;
         $report->viewers = 0;
-        $report->statement;
 
-        // Jika ada file gambar, simpan di storage dan simpan path-nya
         if ($request->hasFile('image')) {
             $report->image = $request->file('image')->store('reports', 'public');
         }
 
         $report->save();
 
-        // Redirect dengan pesan sukses
         return redirect()->back()->with('success', 'Laporan berhasil dibuat.');
     }
 
@@ -78,8 +86,7 @@ class ReportController extends Controller
      */
     public function show($id)
     {
-        $report = Report::with('comments')->findOrFail($id); // Ambil laporan dengan komentar terkait
-
+        $report = Report::with('comments')->findOrFail($id);
         $report->viewers += 1;
         $report->save();
 
@@ -95,52 +102,36 @@ class ReportController extends Controller
      */
     public function storeComment(Request $request, $id)
     {
-        $request->validate([
-            'comment' => 'required|string|max:500',
-        ]);
+        try {
+            $request->validate([
+                'comment' => 'required|string|max:500',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->with('error', 'Komentar tidak boleh kosong atau terlalu panjang.');
+        }
 
         $report = Report::findOrFail($id);
 
         Comment::create([
             'report_id' => $report->id,
             'comment' => $request->comment,
-            'user_id' => auth()->id(), // Mengambil ID pengguna yang login
+            'user_id' => auth()->id(),
         ]);
 
         return redirect()->route('report.show', $id)->with('success', 'Komentar berhasil ditambahkan.');
     }
 
-    // app/Http/Controllers/ReportController.php
     public function myReports()
     {
+        /** @var User $user */
         $user = auth()->user();
         $reports = Report::where('user_id', $user->id)->with('responses')->get();
 
         return view('reports.monitoring', compact('reports'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
-        //
         $report = Report::findOrFail($id);
         $report->delete();
 
@@ -149,31 +140,22 @@ class ReportController extends Controller
 
     public function vote($id)
     {
-        // Cari data laporan berdasarkan ID
         $report = Report::findOrFail($id);
-
-        // Tambahkan jumlah voting
         $report->voting += 1;
         $report->save();
 
-        // Redirect kembali ke halaman sebelumnya dengan pesan sukses
         return redirect()->back()->with('success', 'Vote berhasil ditambahkan.');
     }
 
     public function unvote($id)
     {
-        // Cari data laporan berdasarkan ID
         $report = Report::findOrFail($id);
-
-        // Kurangi jumlah voting
         $report->voting -= 1;
-        $report->save();
         if ($report->voting < 0) {
             $report->voting = 0;
-            $report->save();
         }
+        $report->save();
 
-        // Redirect kembali ke halaman sebelumnya dengan pesan sukses
         return redirect()->back()->with('success', 'Vote berhasil dihapus.');
     }
 

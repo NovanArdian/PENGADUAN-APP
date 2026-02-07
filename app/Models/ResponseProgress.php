@@ -13,10 +13,6 @@ class ResponseProgress extends Model
         'response_id',
         'histories',
     ];
-    
-    protected $casts = [
-        'histories' => 'array',
-    ];
 
     public function response()
     {

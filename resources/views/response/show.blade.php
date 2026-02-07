@@ -1,174 +1,179 @@
 @extends('layouts.layout')
 
 @section('content')
-    <div class="card mb-4 border-0 shadow-lg" style="background: linear-gradient(145deg, #ff6b4a, #ff4d4d); border-radius: 20px;">
-        <div class="card-body p-5">
-            <div class="d-flex align-items-center mb-4">
-                <div class="me-4">
-                    <div class="rounded-circle p-3" style="background-color: rgba(255,255,255,0.2);">
-                        <i class="fas fa-user text-white" style="font-size: 1.5rem;"></i>
+<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-5xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <a href="{{ route('responses.index') }}" class="inline-flex items-center text-gray-600 hover:text-gray-900 font-semibold mb-4 transition">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Kembali ke Daftar
+            </a>
+            <h1 class="text-4xl font-black text-gray-900 mb-2">Detail Progress</h1>
+            <p class="text-gray-600 font-medium">Pantau perkembangan penanganan pengaduan</p>
+        </div>
+
+        <!-- Report Info Card -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 mb-8 overflow-hidden">
+            <div class="gradient-blue px-8 py-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-user text-white text-2xl"></i>
                     </div>
-                </div>
-                <div>
-                    <h5 class="card-title text-white mb-1 fw-bold">{{ $response->report->user->email }}</h5>
-                    <small class="text-white-50">User Details</small>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">{{ $response->report->user->email }}</h2>
+                        <p class="text-blue-100 text-sm">Pengirim Laporan</p>
+                    </div>
                 </div>
             </div>
-
-            <div class="row g-3 mb-4">
-                <div class="col-md-6">
-                    <div class="bg-white bg-opacity-10 p-3 rounded-3">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-calendar-event me-2 text-white"></i>
-                            <span class="text-white">{{ $response->created_at->format('d/m/Y H:i') }}</span>
+            <div class="p-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
+                        <i class="fas fa-calendar text-blue-600 text-lg"></i>
+                        <div>
+                            <p class="text-xs text-gray-500 font-semibold">Tanggal Laporan</p>
+                            <p class="text-sm font-bold text-gray-900">{{ $response->created_at->format('d F Y, H:i') }}</p>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="bg-white bg-opacity-10 p-3 rounded-3">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-check-circle-fill me-2 text-white"></i>
-                            <span class="text-white">Status: 
-                                <span class="badge bg-{{ $response->response_status == 'DONE' ? 'success' : 'warning' }} ms-1">
-                                    {{ $response->response_status }}
-                                </span>
+                    <div class="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
+                        <i class="fas fa-info-circle text-blue-600 text-lg"></i>
+                        <div>
+                            <p class="text-xs text-gray-500 font-semibold">Status</p>
+                            <span class="inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold {{ $response->response_status == 'DONE' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-amber-50 text-amber-700 border border-amber-200' }}">
+                                {{ $response->response_status }}
                             </span>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="card border-0" style="background-color: rgba(255,255,255,0.1); border-radius: 15px;">
-                <div class="card-body">
-                    <p class="card-text text-white lead mb-0">{{ $response->report->description }}</p>
+                <div class="bg-blue-50 rounded-xl p-6 border border-blue-200">
+                    <p class="text-sm font-semibold text-gray-500 mb-2">Deskripsi Laporan</p>
+                    <p class="text-gray-900 leading-relaxed">{{ $response->report->description }}</p>
                 </div>
+                @if ($response->response_status != 'DONE')
+                    <div class="mt-6 text-center">
+                        <form action="{{ route('responses.update', $response->id) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="response_status" value="DONE">
+                            <button type="submit" class="inline-flex items-center px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all">
+                                <i class="fas fa-check-circle mr-2 text-xl"></i>
+                                Nyatakan Selesai
+                            </button>
+                        </form>
+                    </div>
+                @endif
             </div>
-
-            @if ($response->response_status != 'DONE')
-                <div class="mt-4 text-center">
-                    <form action="{{ route('responses.update', $response->id) }}" method="POST">
-                        @csrf
-                        @method('PATCH')
-                        <input type="hidden" name="response_status" value="DONE">
-                        <button type="submit" class="btn btn-light px-5 py-2 shadow-lg" style="border-radius: 50px;">
-                            <i class="bi bi-check-circle me-2"></i>
-                            Nyatakan Selesai
-                        </button>
-                    </form>
-                </div>
-            @endif
         </div>
-    </div>
 
-    <div class="card mb-4 border-0 shadow-lg" style="background: linear-gradient(145deg, #ffffff, #f0f0f0); border-radius: 20px;">
-        <div class="card-body p-5">
-            <h5 class="card-title text-danger fw-bold mb-4">
-                <i class="bi bi-clock-history me-2"></i>Progress History
-            </h5>
-
-            @if ($response->progress->count() > 0)
-                <div class="timeline position-relative">
-                    <div class="timeline-line position-absolute h-100" style="left: 20px; width: 4px; background: linear-gradient(to bottom, #ff6b4a, #ff4d4d);"></div>
-                    @foreach ($response->progress as $progress)
-                        <div class="timeline-item ps-5 mb-4 position-relative">
-                            <div class="timeline-point position-absolute rounded-circle" 
-                                style="left: 10px; top: 0; width: 24px; height: 24px; background: linear-gradient(145deg, #ff6b4a, #ff4d4d); 
-                                       box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                                <div class="bg-white rounded-circle position-absolute" 
-                                     style="width: 10px; height: 10px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
-                            </div>
-                            <div class="card border-0 shadow-sm" style="background-color: #ffffff; border-radius: 15px;">
-                                <div class="card-body">
-                                    <p class="mb-2 text-danger">{{ $progress->histories }}</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted d-flex align-items-center">
-                                            <i class="bi bi-clock me-1 text-danger"></i>
-                                            {{ $progress->created_at->format('d/m/Y H:i') }}
-                                        </small>
+        <!-- Progress History -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 mb-8 overflow-hidden">
+            <div class="gradient-blue px-8 py-6">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    <i class="fas fa-history mr-3 text-2xl"></i>
+                    Riwayat Progress
+                </h2>
+            </div>
+            <div class="p-8">
+                @if ($response->progress->count() > 0)
+                    <div class="space-y-6">
+                        @foreach ($response->progress as $progress)
+                            <div class="relative pl-8 pb-6 border-l-2 border-blue-200 last:border-0 last:pb-0">
+                                <div class="absolute -left-2 top-0 w-4 h-4 bg-blue-600 rounded-full border-4 border-white"></div>
+                                <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                                    <p class="text-gray-900 mb-4 leading-relaxed">{{ $progress->histories }}</p>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-gray-500 font-semibold">
+                                            <i class="far fa-clock mr-1"></i>
+                                            {{ $progress->created_at->format('d F Y, H:i') }}
+                                        </span>
                                         @if ($response->response_status != 'DONE')
-                                            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal"
-                                                data-bs-target="#deleteModal{{ $progress->id }}">
-                                                <i class="bi bi-trash"></i> Hapus
+                                            <button onclick="openDeleteModal({{ $progress->id }})" class="inline-flex items-center px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-bold rounded-lg border border-red-200 transition">
+                                                <i class="fas fa-trash mr-2"></i>Hapus
                                             </button>
                                         @endif
                                     </div>
-
-                                    <!-- Delete Modal (kept similar to previous version) -->
-                                    <div class="modal fade" id="deleteModal{{ $progress->id }}" tabindex="-1"
-                                        aria-labelledby="deleteModalLabel" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header border-bottom-0">
-                                                    <h5 class="modal-title text-danger" id="deleteModalLabel">Konfirmasi Hapus</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <p class="text-danger">Apakah Anda yakin ingin menghapus progress ini?</p>
-                                                </div>
-                                                <div class="modal-footer border-top-0">
-                                                    <button type="button" class="btn btn-secondary"
-                                                        data-bs-dismiss="modal">Batal</button>
-                                                    <form action="{{ route('responses.destroy', $progress->id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-danger">
-                                                            <i class="bi bi-trash"></i> Hapus
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    @endforeach
-                </div>
-            @else
-                <div class="alert text-center" style="background-color: #fff3f0; color: #ff6b4a; border: 2px dashed #ff4d4d; border-radius: 15px;">
-                    <i class="bi bi-info-circle me-2"></i>Belum ada progress yang ditambahkan
-                </div>
-            @endif
-        </div>
-    </div>
-
-    @if ($response->response_status != 'DONE')
-        <div class="card border-0 shadow-lg" style="background: linear-gradient(145deg, #ffffff, #f0f0f0); border-radius: 20px;">
-            <div class="card-body p-5">
-                <h2 class="mb-4 text-danger fw-bold">
-                    <i class="bi bi-plus-circle me-2"></i>Tambah Progress
-                </h2>
-                <form action="{{ route('responses.storeProgress', $response->id) }}" method="POST">
-                    @csrf
-
-                    <div class="mb-4">
-                        <textarea name="histories" id="histories" 
-                            class="form-control @error('histories') is-invalid @enderror" 
-                            rows="4"
-                            placeholder="Deskripsikan progress..." 
-                            required 
-                            style="resize: none; 
-                                   background-color: #ffffff; 
-                                   border: 2px solid #ff6b4a; 
-                                   border-radius: 15px;">{{ old('histories') }}</textarea>
-
-                        @error('histories')
-                            <div class="invalid-feedback text-danger">{{ $message }}</div>
-                        @enderror
+                        @endforeach
                     </div>
-
-                    <div class="d-flex justify-content-between">
-                        <button type="submit" class="btn btn-danger px-5 py-2" style="background: linear-gradient(145deg, #ff6b4a, #ff4d4d); border: none; border-radius: 50px;">
-                            <i class="bi bi-save me-2"></i>Simpan Progress
-                        </button>
-                        <a href="{{ route('responses.index') }}" class="btn btn-outline-danger px-5 py-2" style="border-radius: 50px;">
-                            <i class="bi bi-x-circle me-2"></i>Batal
-                        </a>
+                @else
+                    <div class="text-center py-12">
+                        <i class="fas fa-inbox text-gray-400 text-4xl mb-3"></i>
+                        <p class="text-gray-500 font-medium">Belum ada progress yang ditambahkan</p>
                     </div>
-                </form>
+                @endif
             </div>
         </div>
-    @endif
+
+        <!-- Add Progress Form -->
+        @if ($response->response_status != 'DONE')
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                <div class="gradient-blue px-8 py-6">
+                    <h2 class="text-xl font-bold text-white flex items-center">
+                        <i class="fas fa-plus-circle mr-3 text-2xl"></i>
+                        Tambah Progress
+                    </h2>
+                </div>
+                <div class="p-8">
+                    <form action="{{ route('responses.storeProgress', $response->id) }}" method="POST">
+                        @csrf
+                        <div class="mb-6">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Deskripsi Progress</label>
+                            <textarea name="histories" rows="5" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none @error('histories') border-red-500 @enderror" placeholder="Deskripsikan progress penanganan...">{{ old('histories') }}</textarea>
+                            @error('histories')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="submit" class="flex-1 px-6 py-4 gradient-blue text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all">
+                                <i class="fas fa-save mr-2"></i>Simpan Progress
+                            </button>
+                            <a href="{{ route('responses.index') }}" class="px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition">
+                                Batal
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endif
+    </div>
+</div>
+
+<!-- Delete Modal -->
+@foreach ($response->progress as $progress)
+<div id="deleteModal{{ $progress->id }}" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold text-gray-900">Konfirmasi Hapus</h3>
+            <button onclick="closeDeleteModal({{ $progress->id }})" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <p class="text-gray-600 mb-6">Apakah Anda yakin ingin menghapus progress ini? Tindakan ini tidak dapat dibatalkan.</p>
+        <form action="{{ route('responses.destroy', $progress->id) }}" method="POST">
+            @csrf
+            @method('DELETE')
+            <div class="flex gap-3">
+                <button type="button" onclick="closeDeleteModal({{ $progress->id }})" class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition">
+                    Batal
+                </button>
+                <button type="submit" class="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all">
+                    <i class="fas fa-trash mr-2"></i>Hapus
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endforeach
+
+<script>
+function openDeleteModal(id) {
+    document.getElementById('deleteModal' + id).classList.remove('hidden');
+}
+
+function closeDeleteModal(id) {
+    document.getElementById('deleteModal' + id).classList.add('hidden');
+}
+</script>
+
 @endsection

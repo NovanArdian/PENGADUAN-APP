@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Response;
 use App\Models\Report;
 use App\Models\ResponseProgress;
-use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class ResponseController extends Controller
 {
@@ -15,18 +15,21 @@ class ResponseController extends Controller
      */
     public function index()
     {
-        // Cuma tampilkan data yang sesuai dengan provinsi si staff
-        $reports = Report::all();
+        /** @var User $user */
+        $user = auth()->user();
+        
+        if ($user->role === 'STAFF') {
+            $staffProvince = $user->staffProvinces()->first();
+            if (!$staffProvince) {
+                return redirect()->back()->with('error', 'Staff belum memiliki provinsi yang ditugaskan.');
+            }
+            
+            $reports = Report::where('province', $staffProvince->province)->get();
+        } else {
+            $reports = Report::all();
+        }
+        
         return view('response.index', compact('reports'));
-    }
-
-    /**
-     * Show the form for creating a new response.
-     */
-    public function create()
-    {
-        // Ambil semua laporan untuk dropdown pilihan
-
     }
 
     /**
@@ -34,24 +37,43 @@ class ResponseController extends Controller
      */
     public function store(Request $request, string $id)
     {
-        $request->validate([
-            'response_status' => 'required|in:REJECT,ON_PROCESS',
-        ]);
+        /** @var User $user */
+        $user = auth()->user();
+        $report = Report::findOrFail($id);
+        
+        if ($user->role === 'STAFF') {
+            $staffProvince = $user->staffProvinces()->first();
+            if (!$staffProvince || $report->province !== $staffProvince->province) {
+                return redirect()->back()->with('error', 'Anda tidak memiliki akses ke laporan ini.');
+            }
+        }
+        
+        try {
+            $request->validate([
+                'response_status' => 'required|in:REJECT,ON_PROCESS',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->with('error', 'Status tanggapan tidak valid.');
+        }
 
         Response::create([
             'report_id' => $id,
-            'staff_id' => Auth::user()->id,
+            'staff_id' => $user->id,
             'response_status' => $request->response_status,
         ]);
 
         return redirect()->back()->with('success', 'Tanggapan berhasil ditambahkan.');
-    }   
+    }
 
     public function storeProgress(Request $request, string $id)
     {
-        $request->validate([
-            'histories' => 'required|string|max:1000',
-        ]);
+        try {
+            $request->validate([
+                'histories' => 'required|string|max:1000',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->with('error', 'Progress tidak boleh kosong atau terlalu panjang.');
+        }
 
         ResponseProgress::create([
             'response_id' => $id,
@@ -66,19 +88,18 @@ class ResponseController extends Controller
      */
     public function show(string $id)
     {
-        // Ambil response dengan semua progress-nya
+        /** @var User $user */
+        $user = auth()->user();
         $response = Response::with('report', 'progress')->findOrFail($id);
+        
+        if ($user->role === 'STAFF') {
+            $staffProvince = $user->staffProvinces()->first();
+            if (!$staffProvince || $response->report->province !== $staffProvince->province) {
+                return redirect()->back()->with('error', 'Anda tidak memiliki akses ke tanggapan ini.');
+            }
+        }
 
         return view('response.show', compact('response'));
-    }
-
-    /**
-     * Show the form for editing the specified response.
-     */
-    public function edit(string $id)
-    {
-        $response = Response::findOrFail($id);
-        return view('response.edit', compact('response'));
     }
 
     /**

@@ -11,7 +11,7 @@ class CreateResponseProgressTable extends Migration
         Schema::create('response_progress', function (Blueprint $table) {
             $table->id();
             $table->foreignId('response_id')->constrained()->onDelete('cascade');
-            $table->json('histories');
+            $table->text('histories');
             $table->timestamps();
         });
     }

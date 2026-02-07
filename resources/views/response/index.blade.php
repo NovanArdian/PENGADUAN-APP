@@ -1,265 +1,239 @@
 @extends('layouts.layout')
 
 @section('content')
-    @if (Session::get('success'))
-        <div class="alert alert-success alert-dismissible fade show shadow-lg rounded-4" style="background: linear-gradient(135deg, #ff4d4d, #ff7f50); color: white;">
-            <i class="fas fa-check-circle me-2 text-white"></i>{{ Session::get('success') }}
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    @if (Session::get('failed'))
-        <div class="alert alert-warning alert-dismissible fade show shadow-lg rounded-4" style="background: linear-gradient(135deg, #ff6b4d, #ff9a5f); color: white;">
-            {{ Session::get('failed') }}
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show shadow-lg rounded-4" style="background: linear-gradient(135deg, #ff3d3d, #ff6b4d); color: white;">
-            <i class="fas fa-exclamation-circle me-2 text-white"></i>
-            <ul class="mb-0 text-white">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    <!-- Tabel Daftar Laporan -->
-    <div class="card rounded-4 border-0 mb-4 shadow-lg">
-        <div class="card-header" style="background: linear-gradient(135deg, #ff4d4d, #ff7f50);" class="bg-primary bg-gradient text-white py-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="h5 fw-bold mb-0 text-white"><i class="fas fa-list-alt me-2"></i>Daftar Pengaduan</span>
-                <div class="dropdown">
-                    <button class="btn btn-light border-white btn-sm dropdown-toggle d-flex align-items-center hover-shadow"
-                        type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-file-excel me-2"></i>Export (.xlsx)
+<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8 flex items-center justify-between">
+            <div>
+                <h1 class="text-4xl font-black text-gray-900 mb-2">Data Laporan</h1>
+                <p class="text-gray-600 font-medium">Kelola dan tindak lanjuti pengaduan masyarakat</p>
+            </div>
+            <div class="relative">
+                <button onclick="toggleExport()" class="inline-flex items-center px-6 py-3 gradient-blue text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all">
+                    <i class="fas fa-file-excel mr-2"></i>
+                    Export Excel
+                </button>
+                <div id="exportMenu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-10">
+                    <a href="{{ route('responses.export') }}" class="block px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
+                        <i class="fas fa-download mr-2 text-blue-600"></i>Seluruh Data
+                    </a>
+                    <button onclick="openDateModal()" class="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
+                        <i class="fas fa-calendar mr-2 text-blue-600"></i>Berdasarkan Tanggal
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="exportDropdown">
-                        <li><a class="dropdown-item" href="{{ route('responses.export') }}">Seluruh Data</a></li>
-                        <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exportModal">Berdasarkan
-                                Tanggal</a></li>
-                    </ul>
-
-                    <!-- Modal Input Tanggal -->
-                    <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel"
-                        aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content rounded-4">
-                                <div class="modal-header" style="background: #fff2e6;">
-                                    <h5 class="modal-title text-danger" id="exportModalLabel">Export Berdasarkan Tanggal</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <form action="{{ route('responses.export') }}" method="GET">
-                                        <div class="input-group mb-3">
-                                            <input type="date" class="form-control" name="date" id="date"
-                                                aria-label="Tanggal" aria-describedby="dateAddon" required>
-                                            <button class="btn btn-danger" type="submit" id="dateAddon">Export</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-striped mb-0">
-                    <thead style="background: #fff2e6;">
+
+        <!-- Alerts -->
+        @if (Session::get('success'))
+            <div class="mb-6 bg-green-50 border-l-4 border-green-500 rounded-lg p-4 shadow-sm">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                    <p class="text-green-800 font-medium">{{ Session::get('success') }}</p>
+                </div>
+            </div>
+        @endif
+
+        @if (Session::get('failed'))
+            <div class="mb-6 bg-red-50 border-l-4 border-red-500 rounded-lg p-4 shadow-sm">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
+                    <p class="text-red-800 font-medium">{{ Session::get('failed') }}</p>
+                </div>
+            </div>
+        @endif
+
+        <!-- Table Card -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+            <div class="gradient-blue px-8 py-6">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    <i class="fas fa-list-alt mr-3 text-2xl"></i>
+                    Daftar Pengaduan ({{ $reports->count() }})
+                </h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-3 text-center text-danger">Gambar & Pengirim</th>
-                            <th class="px-4 py-3 text-danger">Lokasi & Tanggal</th>
-                            <th class="px-4 py-3 text-danger">Deskripsi</th>
-                            <th class="px-4 py-3 text-center text-danger">Jumlah Vote</th>
-                            <th class="px-4 py-3 text-center text-danger">Aksi</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Pengirim</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Lokasi & Tanggal</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Deskripsi</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Vote</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        @if ($reports->isEmpty())
-                            <tr>
-                                <td class="px-4 py-3 text-center" colspan="5">
-                                    <i class="fas fa-exclamation-circle me-2 text-danger"></i>
-                                    Anda belum memiliki pengaduan.
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse ($reports as $report)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-4">
+                                        @if ($report->image)
+                                            <img onclick="openImageModal('{{ asset('storage/' . $report->image) }}')" src="{{ asset('storage/' . $report->image) }}" class="w-14 h-14 rounded-xl object-cover border-2 border-gray-200 cursor-pointer hover:border-blue-500 transition" alt="Report">
+                                        @else
+                                            <div class="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center border-2 border-gray-200">
+                                                <i class="fas fa-image text-gray-400"></i>
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <p class="text-sm font-bold text-gray-900">{{ $report->user->email }}</p>
+                                            <p class="text-xs text-gray-500">Pengirim</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="text-sm font-bold text-gray-900 mb-1">
+                                        <i class="fas fa-map-marker-alt text-blue-600 mr-1"></i>{{ $report->village }}
+                                    </p>
+                                    <p class="text-xs text-gray-600 mb-1">{{ $report->subdistrict }}, {{ $report->regency }}</p>
+                                    <p class="text-xs text-gray-500">
+                                        <i class="far fa-calendar mr-1"></i>{{ $report->created_at->format('d M Y') }}
+                                    </p>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="text-sm text-gray-700">{{ Str::limit($report->description, 60) }}</p>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                        <i class="fas fa-thumbs-up mr-1"></i>{{ $report->voting }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    @if ($report->responses && $report->responses->first())
+                                        <a href="{{ route('responses.show', $report->responses->first()->id) }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg shadow-md transition-all">
+                                            <i class="fas fa-eye mr-2"></i>Lihat Progress
+                                        </a>
+                                    @else
+                                        <button onclick="openResponseModal({{ $report->id }})" class="inline-flex items-center px-4 py-2 gradient-blue text-white text-sm font-bold rounded-lg shadow-md hover:shadow-lg transition-all">
+                                            <i class="fas fa-reply mr-2"></i>Tindak Lanjut
+                                        </button>
+                                    @endif
                                 </td>
                             </tr>
-                        @else
-                            @foreach ($reports as $report)
-                                <tr>
-                                    <td class="px-4 py-3">
-                                        <div class="d-flex align-items-center">
-                                            @if ($report->image)
-                                                <a href="{{ asset('storage/' . $report->image) }}" data-bs-toggle="modal"
-                                                    data-bs-target="#imageModal{{ $report->id }}" class="hover-zoom">
-                                                    <img src="{{ asset('storage/' . $report->image) }}"
-                                                        class="rounded-circle border border-2 border-danger shadow-sm" width="60"
-                                                        height="60" style="object-fit: cover;">
-                                                </a>
-                                            @else
-                                                <div class="d-flex justify-content-center align-items-center rounded-circle border border-2 border-danger shadow-sm"
-                                                    style="width: 60px; height: 60px; background-color: #fff2e6;">
-                                                    <i class="fa-solid fa-image text-danger"></i>
-                                                </div>
-                                            @endif
-                                            <div class="ms-3">
-                                                <span class="fw-bold text-danger d-block">{{ $report->user->email }}</span>
-                                                <small class="text-muted"><i class="fas fa-user me-1 text-danger"></i>Pengirim</small>
-                                            </div>
-                                        </div>
-
-                                        <!-- Modal Preview Gambar -->
-                                        <div class="modal fade" id="imageModal{{ $report->id }}" tabindex="-1"
-                                            aria-labelledby="imageModalLabel{{ $report->id }}" aria-hidden="true">
-                                            <div class="modal-dialog modal-lg modal-dialog-centered">
-                                                <div class="modal-content border-0 rounded-4 overflow-hidden">
-                                                    <div class="modal-header bg-light">
-                                                        <h5 class="modal-title" id="imageModalLabel{{ $report->id }}">
-                                                            <i class="fas fa-image me-2"></i>Preview Gambar
-                                                        </h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                            aria-label="Close"></button>
-                                                    </div>
-                                                    <div class="modal-body text-center mt-3 mb-3 p-0">
-                                                        <img src="{{ asset('storage/' . $report->image) }}"
-                                                            alt="Preview" class="img-fluid">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <div class="fw-bold text-danger mb-1"><i
-                                                class="fas fa-map-marker-alt me-2"></i>{{ $report->village }}</div>
-                                        <div class="small text-muted mb-1">{{ $report->subdistrict }},
-                                            {{ $report->regency }},
-                                            {{ $report->province }}</div>
-                                        <small class="text-muted d-flex align-items-center">
-                                            <i class="far fa-calendar-alt me-2"></i>
-                                            {{ $report->created_at->format('d F Y') }}
-                                        </small>
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <p class="mb-0 text-dark">{{ Str::limit($report->description, 50) }}</p>
-                                        @if (strlen($report->description) > 50)
-                                            <small class="text-danger cursor-pointer">Baca selengkapnya...</small>
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-3 text-center">
-                                        <span class="badge bg-danger bg-gradient rounded-pill px-3 py-2">
-                                            <i class="fas fa-thumbs-up me-1"></i>{{ $report->voting }}
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3 text-center">
-                                        <div class="dropdown">
-                                            <button
-                                                class="btn btn-outline-danger btn-sm dropdown-toggle d-flex align-items-center mx-auto"
-                                                type="button" id="actionMenu" data-bs-toggle="dropdown"
-                                                aria-expanded="false">
-                                                <i class="fas fa-cog me-2"></i>Aksi
-                                            </button>
-                                            <ul class="dropdown-menu shadow border-0" aria-labelledby="actionMenu">
-                                                <li>
-                                                    @if ($report->responses && $report->responses->first())
-                                                        <a href="{{ route('responses.show', $report->responses->first()->id) }}"
-                                                            class="dropdown-item text-danger d-flex align-items-center">
-                                                            <i class="fas fa-check-circle me-2"></i>
-                                                            Lihat Progress
-                                                        </a>
-                                                    @else
-                                                        <a class="dropdown-item d-flex align-items-center" href="#"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#responseModal{{ $report->id }}">
-                                                            <i class="fas fa-info-circle me-2"></i>Tindak lanjut
-                                                        </a>
-                                                    @endif
-                                                </li>
-                                            </ul>
-                                        </div>
-
-                                        <!-- Modal Tindak Lanjut -->
-                                        <div class="modal fade" id="responseModal{{ $report->id }}" tabindex="-1"
-                                            aria-labelledby="responseModalLabel{{ $report->id }}" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content border-0 rounded-4">
-                                                    <div class="modal-header bg-light">
-                                                        <h5 class="modal-title"
-                                                            id="responseModalLabel{{ $report->id }}">
-                                                            <i class="fas fa-reply me-2"></i>Tindak Lanjut Pengaduan
-                                                        </h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                            aria-label="Close"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <form action="{{ route('responses.store', $report->id) }}"
-                                                            method="POST">
-                                                            @csrf
-                                                            <div class="mb-4">
-                                                                <label class="form-label fw-bold">Status Tanggapan</label>
-                                                                <select class="form-select" name="response_status"
-                                                                    required>
-                                                                    <option value="REJECT">REJECT</option>
-                                                                    <option value="ON_PROCESS">ON PROCESS</option>
-                                                                </select>
-                                                            </div>
-                                                            <div class="text-end">
-                                                                <button type="button" class="btn btn-light me-2"
-                                                                    data-bs-dismiss="modal">
-                                                                    <i class="fas fa-times me-2"></i>Tutup
-                                                                </button>
-                                                                <button type="submit" class="btn btn-danger px-4">
-                                                                    <i class="fas fa-save me-2"></i>Simpan
-                                                                </button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        @endif
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 text-center">
+                                    <i class="fas fa-inbox text-gray-400 text-4xl mb-3"></i>
+                                    <p class="text-gray-500 font-medium">Belum ada pengaduan</p>
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+</div>
 
-    <style>
-        .hover-shadow:hover {
-            box-shadow: 0 0.125rem 0.25rem rgba(255, 77, 77, 0.2);
-            transition: all 0.3s ease;
-        }
+<!-- Modal Image Preview -->
+<div id="imageModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onclick="closeImageModal()">
+    <div class="bg-white rounded-2xl max-w-4xl w-full p-4" onclick="event.stopPropagation()">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-gray-900">Preview Gambar</h3>
+            <button onclick="closeImageModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <img id="modalImage" src="" class="w-full rounded-xl" alt="Preview">
+    </div>
+</div>
 
-        .hover-zoom:hover img {
-            transform: scale(1.1);
-            transition: all 0.3s ease;
-            border-color: #ff4d4d !important;
-        }
+<!-- Modal Export by Date -->
+<div id="dateModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold text-gray-900">Export Berdasarkan Tanggal</h3>
+            <button onclick="closeDateModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <form action="{{ route('responses.export') }}" method="GET">
+            <div class="mb-6">
+                <label class="block text-sm font-bold text-gray-700 mb-2">Pilih Tanggal</label>
+                <input type="date" name="date" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeDateModal()" class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition">
+                    Batal
+                </button>
+                <button type="submit" class="flex-1 px-4 py-3 gradient-blue text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition">
+                    Export
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
-        .cursor-pointer {
-            cursor: pointer;
-            color: #ff4d4d;
-        }
+<!-- Modal Response -->
+@foreach ($reports as $report)
+<div id="responseModal{{ $report->id }}" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold text-gray-900">Tindak Lanjut Pengaduan</h3>
+            <button onclick="closeResponseModal({{ $report->id }})" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <form action="{{ route('responses.store', $report->id) }}" method="POST">
+            @csrf
+            <div class="mb-6">
+                <label class="block text-sm font-bold text-gray-700 mb-2">Status Tanggapan</label>
+                <select name="response_status" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    <option value="REJECT">REJECT</option>
+                    <option value="ON_PROCESS">ON PROCESS</option>
+                </select>
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeResponseModal({{ $report->id }})" class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition">
+                    Batal
+                </button>
+                <button type="submit" class="flex-1 px-4 py-3 gradient-blue text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition">
+                    Simpan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endforeach
 
-        .table-striped tbody tr:nth-of-type(odd) {
-            background-color: rgba(255, 77, 77, 0.05);
-        }
+<script>
+function toggleExport() {
+    document.getElementById('exportMenu').classList.toggle('hidden');
+}
 
-        .table-hover tbody tr:hover {
-            background-color: rgba(255, 77, 77, 0.1);
-            transition: background-color 0.3s ease;
-        }
+function openImageModal(src) {
+    document.getElementById('modalImage').src = src;
+    document.getElementById('imageModal').classList.remove('hidden');
+}
 
-        .modal-content {
-            border-radius: 1rem !important;
-        }
+function closeImageModal() {
+    document.getElementById('imageModal').classList.add('hidden');
+}
 
-        .dropdown-menu {
-            border-radius: 0.75rem !important;
-        }
-    </style>
+function openDateModal() {
+    document.getElementById('dateModal').classList.remove('hidden');
+    toggleExport();
+}
+
+function closeDateModal() {
+    document.getElementById('dateModal').classList.add('hidden');
+}
+
+function openResponseModal(id) {
+    document.getElementById('responseModal' + id).classList.remove('hidden');
+}
+
+function closeResponseModal(id) {
+    document.getElementById('responseModal' + id).classList.add('hidden');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const exportMenu = document.getElementById('exportMenu');
+    if (!event.target.closest('button') && !exportMenu.classList.contains('hidden')) {
+        exportMenu.classList.add('hidden');
+    }
+});
+</script>
+
 @endsection

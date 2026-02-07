@@ -5,34 +5,43 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\StaffProvince;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
     public function run()
     {
-        // Create Staff Users
-        User::create([
+        // Create Staff User with Province
+        $staff = User::create([
             'email' => 'staff@example.com',
             'password' => Hash::make('password123'),
             'role' => 'STAFF',
         ]);
+        
+        StaffProvince::create([
+            'user_id' => $staff->id,
+            'province' => 'DKI Jakarta',
+        ]);
 
-        // Create Head Staff Users
+        // Create Head Staff User
         User::create([
             'email' => 'headstaff@example.com',
             'password' => Hash::make('password123'),
             'role' => 'HEAD_STAFF',
         ]);
 
-        // Add more staff users if needed
-        User::factory()->count(5)->create(['role' => 'STAFF']);
+        // Create additional staff users with provinces
+        $provinces = ['Jawa Barat', 'Jawa Tengah', 'Jawa Timur', 'Sumatera Utara', 'Bali'];
+        
+        for ($i = 0; $i < 5; $i++) {
+            $staffUser = User::factory()->create(['role' => 'STAFF']);
+            StaffProvince::create([
+                'user_id' => $staffUser->id,
+                'province' => $provinces[$i],
+            ]);
+        }
 
-        // Add more head staff users if needed
+        // Create additional head staff users
         User::factory()->count(2)->create(['role' => 'HEAD_STAFF']);
     }
 }

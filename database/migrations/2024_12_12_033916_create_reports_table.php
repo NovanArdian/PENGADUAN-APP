@@ -16,7 +16,7 @@ class CreateReportsTable extends Migration
             $table->string('regency');
             $table->string('subdistrict');
             $table->string('village');
-            $table->json('voting');
+            $table->integer('voting')->default(0);
             $table->integer('viewers')->default(0);
             $table->string('image')->nullable();
             $table->boolean('statement')->default(false);

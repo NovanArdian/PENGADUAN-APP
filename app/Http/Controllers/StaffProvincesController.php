@@ -2,72 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Response;
 use App\Models\Report;
+use App\Models\User;
 
 class StaffProvincesController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function chart()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
-
-    public function chart (Request $request)
-    {
-        $report = Report::all();
-        $response = Response::all();
+        /** @var User $user */
+        $user = auth()->user();
+        
+        if ($user->role === 'STAFF') {
+            $staffProvince = $user->staffProvinces()->first();
+            if (!$staffProvince) {
+                return redirect()->back()->with('error', 'Staff belum memiliki provinsi yang ditugaskan.');
+            }
+            
+            $report = Report::where('province', $staffProvince->province)->get();
+            $response = Response::whereHas('report', function($query) use ($staffProvince) {
+                $query->where('province', $staffProvince->province);
+            })->get();
+        } else {
+            $report = Report::all();
+            $response = Response::all();
+        }
 
         $report_count = count($report);
         $response_count = count($response);

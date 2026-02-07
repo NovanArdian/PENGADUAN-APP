@@ -30,4 +30,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Comment::class);
     }
+    
+    public function responses()
+    {
+        return $this->hasMany(Response::class, 'staff_id');
+    }
+    
+    public function getAssignedProvince()
+    {
+        return $this->staffProvinces()->first()?->province;
+    }
 }

@@ -1,6 +1,5 @@
 <?php
 
-// app/Http/Controllers/StaffController.php
 namespace App\Http\Controllers;
 
 use App\Models\User;
@@ -10,42 +9,46 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    // Menampilkan daftar staff
     public function index()
     {
         $staffs = User::where('role', 'STAFF')->with('staffProvinces')->get();
         return view('hstaff.create', compact('staffs'));
     }
 
-    // Menghapus staff jika belum pernah tertaut dengan tanggapan pengaduan
     public function destroy(User $user)
     {
-        if ($user->responses()->count() > 0) {
-            return redirect()->back()->with('error', 'Tidak dapat menghapus staff yang memiliki tanggapan.');
+        if ($user->role !== 'STAFF') {
+            return redirect()->back()->with('error', 'Hanya dapat menghapus akun staff.');
         }
 
+        $user->staffProvinces()->delete();
         $user->delete();
+        
         return redirect()->route('staff.index')->with('success', 'Staff berhasil dihapus.');
     }
 
-    // Reset password menjadi 4 kata awal dari email
     public function resetPassword(User $user)
     {
-        $emailParts = explode('@', $user->email);
-        $newPassword = substr($emailParts[0], 0, 4) . '1234';
-        $user->update(['password' => Hash::make($newPassword)]);
+        if ($user->role !== 'STAFF') {
+            return redirect()->back()->with('error', 'Hanya dapat reset password staff.');
+        }
 
-        return redirect()->route('staff.index')->with('success', 'Password berhasil direset.');
+        $user->update(['password' => Hash::make('password123')]);
+
+        return redirect()->route('staff.index')->with('success', 'Password berhasil direset menjadi password123.');
     }
 
-    // Menambahkan akun staff
     public function store(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
-            'province' => 'required|string',
-        ]);
+        try {
+            $request->validate([
+                'email' => 'required|email|unique:users,email',
+                'password' => 'required|string|min:6',
+                'province' => 'required|string',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->with('error', 'Data tidak valid. Periksa email dan password.')->withInput();
+        }
     
         $user = User::create([
             'email' => $request->email,
