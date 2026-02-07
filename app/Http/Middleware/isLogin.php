@@ -19,7 +19,7 @@ class isLogin
         if(Auth::check()) {
             return $next($request);
         } else {
-            return redirect()->route('welcome')->with('failed', 'Silahkan login terlebih dahulu!');
+            return redirect()->route('welcome')->with('error', 'Silahkan login terlebih dahulu!');
         }
     }
 }

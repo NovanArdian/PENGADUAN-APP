@@ -19,7 +19,7 @@ class isHeadStaff
         if (Auth::user()->role == 'HEAD_STAFF') {
             return $next($request);
         } else {
-            return redirect()->route('welcome')->with('failed', 'Anda bukan head staff!');
+            return redirect()->route('welcome')->with('error', 'Anda bukan head staff!');
         }
     }
 }

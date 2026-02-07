@@ -19,7 +19,7 @@ class isStaff
         if (Auth::user()->role == 'STAFF' || Auth::user()->role == 'HEAD_STAFF') {
             return $next($request);
         } else {
-            return redirect()->route('welcome')->with('failed', 'Anda tidak memiliki akses!');
+            return redirect()->route('welcome')->with('error', 'Anda tidak memiliki akses!');
         }
     }
 }
